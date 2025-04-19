@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Chatbot</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <!-- Welcome Screen -->
+    <div class="welcome-screen" id="welcome-screen">Hi! Welcome to Modern Chatbot 🚀</div>
+
+    <div class="chat-container">
+        <h2>Chatbot</h2>
+        <div id="chat-box"></div>
+        <p class="typing" id="typing-indicator"><span>.</span><span>.</span><span>.</span></p>
+        <div class="input-container">
+            <input type="text" id="user-input" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            setTimeout(() => {
+                document.getElementById("welcome-screen").classList.add("hidden");
+            }, 3000);  // Display welcome screen for 3 seconds before fading out
+        };
+
+        function handleKeyPress(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        }
+
+        function sendMessage() {
+            let userInput = document.getElementById("user-input").value;
+            if (userInput.trim() === "") return;
+
+            let chatBox = document.getElementById("chat-box");
+            let userBubble = `<div class='message user-message'><strong>You:</strong> ${userInput}</div>`;
+            chatBox.innerHTML += userBubble;
+            document.getElementById("user-input").value = "";
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            // Show typing indicator
+            document.getElementById("typing-indicator").style.display = "block";
+
+            fetch("/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: userInput }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                setTimeout(() => {
+                    document.getElementById("typing-indicator").style.display = "none"; 
+
+                    let botBubble = data.image 
+                        ? `<div class='message bot-message'><strong>Chatbot:</strong> <br><img src="${data.image}" alt="Generated Image" style="max-width:100%; border-radius: 8px;"/> </div>`
+                        : `<div class='message bot-message'><strong>Chatbot:</strong> ${data.response}</div>`;
+                    chatBox.innerHTML += botBubble;
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }, 1000);
+            })
+            .catch(error => console.error("Error:", error));
+        }
+    </script>
+
+</body>
+</html>
